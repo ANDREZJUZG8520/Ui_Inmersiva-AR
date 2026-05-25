@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
+
+<title>Disco Party AR</title>
+
+<script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/aframe/build/aframe-ar.js"></script>
+
+<style>
+
+body{
+
+    margin:0;
+    overflow:hidden;
+    font-family:Arial,sans-serif;
+
+}
+
+.overlay{
+
+    position:absolute;
+
+    top:20px;
+    left:20px;
+
+    z-index:20;
+
+    color:white;
+
+}
+
+h1{
+
+    letter-spacing:4px;
+
+}
+
+.homeButton{
+
+    position:absolute;
+
+    top:20px;
+    right:20px;
+
+    z-index:30;
+
+    padding:12px 24px;
+
+    border:none;
+    border-radius:30px;
+
+    background:white;
+    color:black;
+
+    font-weight:bold;
+
+    cursor:pointer;
+
+    transition:0.3s ease;
+
+}
+
+.homeButton:hover{
+
+    background:#ff00ff;
+
+    color:white;
+
+    transform:scale(1.05);
+
+    box-shadow:0 0 20px #ff00ff;
+
+}
+.partyOverlay{
+
+    position:absolute;
+
+    width:100%;
+    height:100%;
+
+    top:0;
+    left:0;
+
+    z-index:5;
+
+    pointer-events:none;
+
+    mix-blend-mode:screen;
+
+    opacity:0.25;
+
+    animation:partyColors 8s linear infinite;
+
+}
+
+@keyframes partyColors{
+
+    0%{
+        background:#ff00ff;
+    }
+
+    25%{
+        background:#00ffff;
+    }
+
+    50%{
+        background:#3300ff;
+    }
+
+    75%{
+        background:#ff0066;
+    }
+
+    100%{
+        background:#ff00ff;
+    }
+
+}
+
+.beam{
+
+    position:absolute;
+
+    width:200px;
+    height:200%;
+
+    top:-50%;
+
+    background:linear-gradient(
+
+        transparent,
+        rgba(255,255,255,0.25),
+        transparent
+
+    );
+
+    filter:blur(30px);
+
+    transform:rotate(25deg);
+
+    animation:moveBeam 6s linear infinite;
+
+    z-index:6;
+
+    pointer-events:none;
+
+}
+
+.beam2{
+
+    left:70%;
+
+    animation-delay:3s;
+
+}
+
+@keyframes moveBeam{
+
+    0%{
+
+        transform:
+        translateX(-300px)
+        rotate(25deg);
+
+    }
+
+    100%{
+
+        transform:
+        translateX(1800px)
+        rotate(25deg);
+
+    }
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="partyOverlay"></div>
+
+<div class="beam"></div>
+
+<div class="beam beam2"></div>
+
+<button class="homeButton"
+onclick="window.location.href='../index.html'">
+
+HOME
+
+</button>
+
+<div class="overlay">
+
+<h1>DISCO PARTY AR</h1>
+
+<p>Move your camera around</p>
+
+</div>
+
+<audio
+id="music"
+autoplay
+loop>
+
+<source src="../music/song.mp3"
+type="audio/mpeg">
+
+</audio>
+
+<a-scene
+
+embedded
+
+arjs="sourceType: webcam; debugUIEnabled: false;"
+
+renderer="logarithmicDepthBuffer: true;"
+
+>
+
+    //////////////////////////////////////////////////
+    // LIGHTS
+    //////////////////////////////////////////////////
+
+    <a-light
+        type="ambient"
+        color="#ffffff"
+        intensity="1.8">
+    </a-light>
+
+    <a-light
+        type="point"
+        color="#ff00ff"
+        intensity="5"
+        position="2 4 2"
+        animation="
+            property: position;
+            to: -2 4 -2;
+            dir: alternate;
+            dur: 2500;
+            loop: true">
+    </a-light>
+
+    <a-light
+        type="point"
+        color="#00ffff"
+        intensity="5"
+        position="-2 4 -2"
+        animation="
+            property: position;
+            to: 2 4 2;
+            dir: alternate;
+            dur: 3000;
+            loop: true">
+    </a-light>
+
+    //////////////////////////////////////////////////
+    // LEFT DISCO BALL
+    //////////////////////////////////////////////////
+
+    <a-entity
+
+        gltf-model="../models/BolaDisco.glb"
+
+        position="-1.2 0 -3"
+
+        scale="0.6 0.6 0.6"
+
+        animation="
+            property: rotation;
+            to: 0 360 0;
+            loop: true;
+            dur: 6000;
+            easing: linear;"
+
+    >
+
+    </a-entity>
+
+    //////////////////////////////////////////////////
+    // RIGHT DISCO BALL
+    //////////////////////////////////////////////////
+
+    <a-entity
+
+        gltf-model="../models/BolaDisco.glb"
+
+        position="1.2 0 -3"
+
+        scale="0.6 0.6 0.6"
+
+        animation="
+            property: rotation;
+            to: 0 -360 0;
+            loop: true;
+            dur: 6000;
+            easing: linear;"
+
+    >
+
+    </a-entity>
+
+    //////////////////////////////////////////////////
+    // CAMERA
+    //////////////////////////////////////////////////
+
+    <a-entity camera></a-entity>
+
+</a-scene>
+
+<script>
+
+const music =
+document.getElementById("music");
+
+music.volume = 0.2;
+
+</script>
+
+</body>
+</html>

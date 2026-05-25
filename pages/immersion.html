@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Retro Radio</title>
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    overflow:hidden;
+    background:black;
+    font-family:Arial,sans-serif;
+    transition:background 2s ease;
+}
+
+canvas{
+    display:block;
+}
+
+.overlay{
+    position:absolute;
+    top:20px;
+    left:20px;
+    z-index:10;
+    color:white;
+    transition:color 2s ease;
+}
+
+h1{
+    font-size:24px;
+    letter-spacing:4px;
+}
+
+p{
+    margin-top:10px;
+    color:#888;
+}
+
+.track{
+    margin-top:15px;
+    color:#00ffff;
+    font-size:18px;
+    font-weight:bold;
+    transition:all 1s ease;
+}
+
+.backButton{
+
+    position:absolute;
+    top:20px;
+    right:20px;
+
+    z-index:20;
+
+    padding:12px 24px;
+
+    border:none;
+    border-radius:30px;
+
+    background:white;
+    color:black;
+
+    cursor:pointer;
+
+    font-weight:bold;
+
+    transition:0.3s ease;
+}
+
+.backButton:hover{
+
+    background:#00ffff;
+
+    transform:scale(1.05);
+
+    box-shadow:0 0 20px #00ffff;
+
+}
+
+.flash{
+
+    animation:flashBackground 2s ease;
+
+}
+
+@keyframes flashBackground{
+
+    0%{
+        background:black;
+    }
+
+    50%{
+        background:white;
+    }
+
+    100%{
+        background:black;
+    }
+
+}
+
+</style>
+</head>
+<body>
+
+<button class="backButton"
+onclick="window.location.href='../index.html'">
+
+HOME
+
+</button>
+
+<div class="overlay">
+
+    <h1>RETRO RADIO</h1>
+
+    <p>Click the radio to change music</p>
+
+    <div class="track" id="track">
+        READY
+    </div>
+
+</div>
+
+<audio id="audio"></audio>
+
+<!-- IMPORT MAP -->
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+
+//////////////////////////////////////////////////
+// IMPORTS
+//////////////////////////////////////////////////
+
+import * as THREE from 'three';
+
+import { OrbitControls }
+from 'three/addons/controls/OrbitControls.js';
+
+import { GLTFLoader }
+from 'three/addons/loaders/GLTFLoader.js';
+
+//////////////////////////////////////////////////
+// SCENE
+//////////////////////////////////////////////////
+
+const scene = new THREE.Scene();
+
+scene.background = new THREE.Color(0x000000);
+
+//////////////////////////////////////////////////
+// CAMERA
+//////////////////////////////////////////////////
+
+const camera = new THREE.PerspectiveCamera(
+
+    75,
+    window.innerWidth/window.innerHeight,
+    0.1,
+    1000
+
+);
+
+camera.position.set(0,1,5);
+
+//////////////////////////////////////////////////
+// RENDERER
+//////////////////////////////////////////////////
+
+const renderer = new THREE.WebGLRenderer({
+
+    antialias:true
+
+});
+
+renderer.setSize(
+
+    window.innerWidth,
+    window.innerHeight
+
+);
+
+renderer.setPixelRatio(window.devicePixelRatio);
+
+document.body.appendChild(renderer.domElement);
+
+//////////////////////////////////////////////////
+// CONTROLS
+//////////////////////////////////////////////////
+
+const controls = new OrbitControls(
+
+    camera,
+    renderer.domElement
+
+);
+
+controls.enableDamping = true;
+
+//////////////////////////////////////////////////
+// LIGHTS
+//////////////////////////////////////////////////
+
+const ambientLight = new THREE.AmbientLight(
+
+    0xffffff,
+    8
+
+);
+
+scene.add(ambientLight);
+
+const pointLight = new THREE.PointLight(
+
+    0x00ffff,
+    30
+
+);
+
+pointLight.position.set(2,3,3);
+
+scene.add(pointLight);
+
+//////////////////////////////////////////////////
+// PARTICLES
+//////////////////////////////////////////////////
+
+const particlesGeometry =
+    new THREE.BufferGeometry();
+
+const particlesCount = 6000;
+
+const positions = [];
+
+for(let i=0;i<particlesCount;i++){
+
+    positions.push(
+
+        (Math.random()-0.5)*30,
+        (Math.random()-0.5)*30,
+        (Math.random()-0.5)*30
+
+    );
+
+}
+
+particlesGeometry.setAttribute(
+
+    'position',
+
+    new THREE.Float32BufferAttribute(
+        positions,
+        3
+    )
+
+);
+
+const particlesMaterial =
+    new THREE.PointsMaterial({
+
+        color:0x00ffff,
+        size:0.04
+
+    });
+
+const particles =
+    new THREE.Points(
+
+        particlesGeometry,
+        particlesMaterial
+
+    );
+
+scene.add(particles);
+
+//////////////////////////////////////////////////
+// FLOOR
+//////////////////////////////////////////////////
+
+const floorGeometry =
+    new THREE.PlaneGeometry(50,50);
+
+const floorMaterial =
+    new THREE.MeshStandardMaterial({
+
+        color:0x050505
+
+    });
+
+const floor =
+    new THREE.Mesh(
+
+        floorGeometry,
+        floorMaterial
+
+    );
+
+floor.rotation.x = -Math.PI / 2;
+
+floor.position.y = -1.5;
+
+scene.add(floor);
+
+//////////////////////////////////////////////////
+// LOAD MODEL
+//////////////////////////////////////////////////
+
+const loader = new GLTFLoader();
+
+let radio;
+
+let rotationDirection = 1;
+
+loader.load(
+
+    '../models/Radio.glb',
+
+    function(gltf){
+
+        radio = gltf.scene;
+
+        scene.add(radio);
+
+        //////////////////////////////////////////////////
+        // AUTO CENTER
+        //////////////////////////////////////////////////
+
+        const box =
+            new THREE.Box3().setFromObject(radio);
+
+        const center =
+            box.getCenter(new THREE.Vector3());
+
+        radio.position.sub(center);
+
+        //////////////////////////////////////////////////
+        // SMALLER SCALE
+        //////////////////////////////////////////////////
+
+        const size =
+            box.getSize(
+                new THREE.Vector3()
+            ).length();
+
+        const scale = 8 / size;
+
+        radio.scale.setScalar(scale);
+
+        radio.position.y = -1;
+
+        console.log("RADIO LOADED");
+
+    },
+
+    undefined,
+
+    function(error){
+
+        console.error(error);
+
+    }
+
+);
+
+//////////////////////////////////////////////////
+// AUDIO
+//////////////////////////////////////////////////
+
+const audio =
+    document.getElementById("audio");
+
+const track =
+    document.getElementById("track");
+
+const songs = [
+
+    {
+
+        file:'../music/song.mp3',
+        color:0x00ffff,
+        name:'CYBER SYNTH'
+
+    },
+
+    {
+
+        file:'../music/song01.mp3',
+        color:0xff00ff,
+        name:'RETRO WAVE'
+
+    }
+
+];
+
+let currentSong = -1;
+
+function playSong(index){
+
+    audio.src = songs[index].file;
+
+    audio.play();
+
+    //////////////////////////////////////////////////
+    // COLOR CHANGE
+    //////////////////////////////////////////////////
+
+    pointLight.color.setHex(
+        songs[index].color
+    );
+
+    particlesMaterial.color.setHex(
+        songs[index].color
+    );
+
+    track.innerText =
+        songs[index].name;
+
+    track.style.color =
+        '#' + songs[index].color.toString(16);
+
+    //////////////////////////////////////////////////
+    // ROTATION CHANGE
+    //////////////////////////////////////////////////
+
+    rotationDirection *= -1;
+
+    //////////////////////////////////////////////////
+    // BACKGROUND FLASH
+    //////////////////////////////////////////////////
+
+    document.body.classList.add('flash');
+
+    setTimeout(()=>{
+
+        document.body.classList.remove('flash');
+
+    },2000);
+
+}
+
+//////////////////////////////////////////////////
+// CLICK DETECTION
+//////////////////////////////////////////////////
+
+const raycaster =
+    new THREE.Raycaster();
+
+const mouse =
+    new THREE.Vector2();
+
+window.addEventListener('click',(event)=>{
+
+    mouse.x =
+        (event.clientX/window.innerWidth)*2 - 1;
+
+    mouse.y =
+        -(event.clientY/window.innerHeight)*2 + 1;
+
+    raycaster.setFromCamera(
+        mouse,
+        camera
+    );
+
+    if(radio){
+
+        const intersects =
+            raycaster.intersectObject(
+                radio,
+                true
+            );
+
+        if(intersects.length > 0){
+
+            currentSong++;
+
+            if(currentSong >= songs.length){
+
+                currentSong = 0;
+
+            }
+
+            playSong(currentSong);
+
+        }
+
+    }
+
+});
+
+//////////////////////////////////////////////////
+// ANIMATION
+//////////////////////////////////////////////////
+
+function animate(){
+
+    requestAnimationFrame(animate);
+
+    particles.rotation.y +=
+        0.0008 * rotationDirection;
+
+    if(radio){
+
+        radio.rotation.y +=
+            0.003 * rotationDirection;
+
+    }
+
+    controls.update();
+
+    renderer.render(
+        scene,
+        camera
+    );
+
+}
+
+animate();
+
+//////////////////////////////////////////////////
+// RESIZE
+//////////////////////////////////////////////////
+
+window.addEventListener('resize',()=>{
+
+    camera.aspect =
+        window.innerWidth/window.innerHeight;
+
+    camera.updateProjectionMatrix();
+
+    renderer.setSize(
+
+        window.innerWidth,
+        window.innerHeight
+
+    );
+
+});
+
+</script>
+
+</body>
+</html>
